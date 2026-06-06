@@ -20,7 +20,7 @@ from . import data_simulator
 from . import quantification
 from . import thresholding
 from . import dashboard
-from . import quality_control
+from .api import run_pipeline_api
 from .__init__ import __version__
 
 
@@ -107,14 +107,9 @@ def main():
         if args.random is not None:
             data_simulator.sample(config, n=args.random)
 
-        # Run the pipeline for target curves
-        data = data_parser.load(config)
-        data = quantification.run_pipeline(data, config=config)
-        data = thresholding.apply_significance_thresholds(data, config=config)
-
-        # Check Quality
-        if args.mad:
-            quality_control.mad_analysis(data, config=config)
+        # Run the pipeline for target curves via the Python API
+        input_data = data_parser.load(config)
+        data = run_pipeline_api(config, input_data, mad=args.mad, device="cpu")
 
         # Run the pipeline for decoy curves in FDR mode
         if args.fdr:

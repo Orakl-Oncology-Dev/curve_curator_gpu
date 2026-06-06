@@ -155,7 +155,8 @@ class TestApiParity:
     def load_results(self, synthetic_data: dict) -> None:
         self.config = synthetic_data["config"]
         self.scipy_result = _run_scipy(self.config)
-        self.torch_result = run_pipeline_api(self.config, device="cpu")
+        input_data = data_parser.load(self.config)
+        self.torch_result = run_pipeline_api(self.config, input_data, device="cpu")
         self.scipy_sse = _compute_sse(self.scipy_result, self.config)
         self.torch_sse = _compute_sse(self.torch_result, self.config)
         self.sse_ratio = self.torch_sse / (self.scipy_sse + 1e-12)
@@ -217,7 +218,8 @@ class TestApiParity:
     )
     def test_cuda_sse_matches_cpu(self, synthetic_data: dict) -> None:
         """CUDA and CPU runs should find the same SSE (same deterministic starts)."""
-        cuda_result = run_pipeline_api(synthetic_data["config"], device="cuda")
+        input_data = data_parser.load(synthetic_data["config"])
+        cuda_result = run_pipeline_api(synthetic_data["config"], input_data, device="cuda")
         cuda_sse = _compute_sse(cuda_result, synthetic_data["config"])
         ratio = cuda_sse / (self.torch_sse + 1e-12)
         assert float(np.median(ratio)) < 1.05, (
